@@ -13,7 +13,7 @@ df_i=pd.read_csv('Channel.csv',engine='python')
 name=importname()
 df_i=df_i.set_index('Channel')
 
-api_key="AIzaSyBToNS7k_So6Ci_4sklt2DfK5IXdpN2rEs"
+api_key="Key"
 youtube=build('youtube', 'v3', developerKey=api_key)
 
  #Modifier la date au besoin
