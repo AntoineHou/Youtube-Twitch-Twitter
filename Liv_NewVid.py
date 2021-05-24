@@ -9,10 +9,10 @@ df.dropna(subset = ["ID"], inplace=True)
 df=df.reset_index(drop=True)
 
 URLT = 'https://api.twitch.tv/helix/streams?user_login='
-api = Api(api_key="AIzaSyBToNS7k_So6Ci_4sklt2DfK5IXdpN2rEs")
+api = Api(api_key="Key")
 authURL = 'https://id.twitch.tv/oauth2/token'
-Client_ID = 'gz9d78zfjgqr7syjhve7ogl0gjn9in'
-Secret  = 'j0snruq4ut0blhulvgkbgzm7ay6ze4'
+Client_ID = 'Client ID'
+Secret  = 'Secret'
 
 AutParams = {'client_id': Client_ID,
              'client_secret': Secret,
