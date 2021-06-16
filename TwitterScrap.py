@@ -8,10 +8,10 @@ df=pd.read_csv('ExempleChann.csv',dtype={'TweeID': 'str'},engine="python")
 Name=list(df["Channel"])
 
 def load_api():
-    consumer_key = "Sl1b8kxfpdesC7VBEqufGbrN2"
-    consumer_secret = "wAB0UMxyVyNnBSBU4fihQFtQpq94Bdds94n273w8QiaRLY3o7f"
-    access_token = "2771537930-b02f7A23GZ389daUggwm14lRzkxbyCY0ZJRUy6l"
-    access_token_secret = "zESyM4t7bJ7wlJSEbWdhxNclnW32gP1xhBlpSLPmPWYa1"
+    consumer_key = ""
+    consumer_secret = ""
+    access_token = ""
+    access_token_secret = ""
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_token_secret)
     return tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True,parser=tweepy.parsers.JSONParser())
