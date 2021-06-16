@@ -6,12 +6,14 @@ from youtubesearchpython import ChannelsSearch
 import time 
 import numpy as np
 from itertools import groupby
+import stweet as st
 
-df=pd.read_csv('Channel.csv')
+df=pd.read_csv('Chess - most watched Twitch channels - SullyGnome.csv')
 df["LinkTW"]="https://www.twitch.tv/"+df["Channel"]+"/about"
 
 aa=0
 listchannel=[]
+twitter=[]
 
 while aa<len(df) :
     driver = webdriver.Chrome(ChromeDriverManager().install())
@@ -24,16 +26,23 @@ while aa<len(df) :
     for a in soup.find_all("a", href=True) :
         url.append(a['href'])
     yt=[]
+    tw=[]
     for link in url :
         if "youtube" in link :
             yt.append(link)
+        if "twitter" in link :
+            tw.append(link)
         else :
             yt=yt
+            tw=tw
     listchannel.append(yt)
+    twitter.append(tw)
     aa=aa+1
     
 df=df.assign(YT=listchannel)
 df['YT'] = df['YT'].apply(lambda x: list(set(x)))
+df=df.assign(TWI=twitter)
+df['TWI'] = df['TWI'].apply(lambda x: list(set(x)))
 
 bb=0
 df["YT1"] = np.nan
@@ -77,6 +86,53 @@ while cc<len(df2) :
     else :
         pass
     cc=cc+1
+    
+    
+dff=pd.concat([df1,df2])    
 
-dff=pd.concat([df1,df2])
-dff.to_csv('Channel.csv',index=False)
+ListTwi=[]
+NBTweet=[]
+NBFollower=[]
+TweeID=[]
+
+
+for twi in dff["TWI"] : 
+    raw=[]
+    for item in twi : 
+        if "www" in item :
+            a=item.replace('https://www.twitter.com/','')
+            a=a.lower()
+            raw.append(a)
+        else :
+            a=item.replace('https://twitter.com/','')
+            a=a.lower()
+            raw.append(a)
+    raw=list(set(raw))
+    if len(raw) == 0:
+        ListTwi.append(np.nan)
+        NBTweet.append(np.nan)
+        NBFollower.append(np.nan)
+        TweeID.append(np.nan)
+    else :
+        ListTwi.append(raw[0])
+        get_users_task = st.GetUsersTask(raw)
+        users_collector = st.CollectorUserOutput()
+        
+        st.GetUsersRunner(
+            get_user_task=get_users_task,
+            user_outputs=[users_collector]
+        ).run()
+        users = users_collector.get_scrapped_users()
+        users=users[0]
+        NBTweet.append(users.statuses_count)
+        NBFollower.append(users.followers_count)
+        TweeID.append(users.rest_id_str)
+
+        
+dff["TweetName"]=ListTwi
+dff["NBTweet"]=NBTweet
+dff["NBFollower"]=NBFollower
+dff["TweeID"]=TweeID
+
+
+dff.to_csv('ExempleChann.csv',index=False)
