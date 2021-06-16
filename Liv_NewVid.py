@@ -11,18 +11,18 @@ df=pd.read_csv('ExempleChann.csv',dtype={'TweeID': 'str'},engine="python")
 
 
 URLT = 'https://api.twitch.tv/helix/streams?user_login='
-api = Api(api_key="AIzaSyB2m84TKUf_bpKMpV5IhfrLHKkXiA-ePyA")
+api = Api(api_key="")
 authURL = 'https://id.twitch.tv/oauth2/token'
-Client_ID = 'gz9d78zfjgqr7syjhve7ogl0gjn9in'
-Secret  = 'j0snruq4ut0blhulvgkbgzm7ay6ze4'
+Client_ID = ''
+Secret  = ''
 
-api_key="AIzaSyB2m84TKUf_bpKMpV5IhfrLHKkXiA-ePyA"
+api_key=""
 youtube=build('youtube', 'v3', developerKey=api_key)
 
-consumer_key = "Sl1b8kxfpdesC7VBEqufGbrN2"
-consumer_secret = "wAB0UMxyVyNnBSBU4fihQFtQpq94Bdds94n273w8QiaRLY3o7f"
-access_token = "2771537930-b02f7A23GZ389daUggwm14lRzkxbyCY0ZJRUy6l"
-access_token_secret = "zESyM4t7bJ7wlJSEbWdhxNclnW32gP1xhBlpSLPmPWYa1"
+consumer_key = ""
+consumer_secret = ""
+access_token = ""
+access_token_secret = ""
   
 
 AutParams = {'client_id': Client_ID,
