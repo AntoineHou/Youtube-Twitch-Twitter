@@ -7,8 +7,10 @@ import time
 import numpy as np
 from itertools import groupby
 import stweet as st
+import re 
+import json
 
-df=pd.read_csv('Chess - most watched Twitch channels - SullyGnome.csv')
+df=pd.read_csv('political_channel.csv')
 df["LinkTW"]="https://www.twitch.tv/"+df["Channel"]+"/about"
 
 aa=0
@@ -18,42 +20,24 @@ twitter=[]
 while aa<len(df) :
     driver = webdriver.Chrome(ChromeDriverManager().install())
     driver.get(df["LinkTW"][aa])
-    time.sleep(5)
+    time.sleep(1)
     data = driver.page_source
     driver.close()
     soup = BeautifulSoup(data, 'html.parser')
     url=[]
     for a in soup.find_all("a", href=True) :
         url.append(a['href'])
-    yt=[]
     tw=[]
     for link in url :
-        if "youtube" in link :
-            yt.append(link)
         if "twitter" in link :
             tw.append(link)
         else :
-            yt=yt
             tw=tw
-    listchannel.append(yt)
     twitter.append(tw)
     aa=aa+1
     
-df=df.assign(YT=listchannel)
-df['YT'] = df['YT'].apply(lambda x: list(set(x)))
 df=df.assign(TWI=twitter)
 df['TWI'] = df['TWI'].apply(lambda x: list(set(x)))
-
-bb=0
-df["YT1"] = np.nan
-
-
-while bb<len(df) :
-    for link in df['YT'][bb] :
-        separators = set(',')
-        result = [''.join(group) for k, group in groupby(str(link), key=lambda x: x not in separators) if k]
-        df['YT1'][bb] = result
-    bb=bb+1
 
 
 df["Name"] = np.nan
@@ -75,6 +59,8 @@ while cc<len(df2) :
         lien=lien.replace("/videos","")
     elif "?sub_confirmation=1" in lien :
         lien=lien.replace("?sub_confirmation=1", "") 
+    elif "c/" in lien :
+        lien=lien.replace("c/", "") 
     chann=ChannelsSearch(lien, limit=5)
     chann=dict(chann.result())
     chann=chann['result']
@@ -87,8 +73,33 @@ while cc<len(df2) :
         pass
     cc=cc+1
     
-    
 dff=pd.concat([df1,df2])    
+
+df=df.set_index(["Channel"])
+
+dictionnary={}
+
+for chann in df["YT2"].iteritems() : 
+    if len(str(chann[1]))>3 :
+        a=ChannelsSearch(chann[1], limit=5)
+        a=dict(a.result())
+        try : 
+            a=a['result']
+            b=[(a[0]['title']),(a[0]['videoCount']),(a[0]['subscribers']),(a[0]['id'])]
+            dictionnary[chann[0]]=b
+        except IndexError :
+            dictionnary[chann[0]]=[0,0,0,0]
+    else :
+        dictionnary[chann[0]]=[0,0,0,0]
+
+mock_df=pd.DataFrame(dictionnary).transpose().reset_index()
+mock_df.columns=["Channel","Name2","Vid2","Sub2","ID2"]
+
+dff["Name2"]=mock_df["Name2"]
+dff["Vid2"]=mock_df["Vid2"]
+dff["Sub2"]=mock_df["Sub2"]
+dff["ID2"]=mock_df["ID2"]
+
 
 ListTwi=[]
 NBTweet=[]
@@ -99,14 +110,13 @@ TweeID=[]
 for twi in dff["TWI"] : 
     raw=[]
     for item in twi : 
-        if "www" in item :
-            a=item.replace('https://www.twitter.com/','')
-            a=a.lower()
-            raw.append(a)
-        else :
-            a=item.replace('https://twitter.com/','')
-            a=a.lower()
-            raw.append(a)
+        item=item.lower()
+        if "status" in item : 
+            pass 
+        else : 
+            match = re.search(r'^.*?\btwitter\.com/@?(\w{1,15})(?:[?/,].*)?$',item)
+            a=match.group(1)
+            raw.append(a)        
     raw=list(set(raw))
     if len(raw) == 0:
         ListTwi.append(np.nan)
@@ -114,19 +124,26 @@ for twi in dff["TWI"] :
         NBFollower.append(np.nan)
         TweeID.append(np.nan)
     else :
+        if "lang" in raw[0] :
+            raw[0]=raw[0].split("?",1)[0]
         ListTwi.append(raw[0])
         get_users_task = st.GetUsersTask(raw)
         users_collector = st.CollectorUserOutput()
-        
         st.GetUsersRunner(
             get_user_task=get_users_task,
             user_outputs=[users_collector]
         ).run()
         users = users_collector.get_scrapped_users()
-        users=users[0]
-        NBTweet.append(users.statuses_count)
-        NBFollower.append(users.followers_count)
-        TweeID.append(users.rest_id_str)
+        if len(users) != 0 :
+            users=users[0]
+            NBTweet.append(users.statuses_count)
+            NBFollower.append(users.followers_count)
+            TweeID.append(str(users.rest_id_str)+"_")
+        else : 
+            NBTweet.append(np.nan)
+            NBFollower.append(np.nan)
+            TweeID.append(np.nan)
+    print(raw)
 
         
 dff["TweetName"]=ListTwi
@@ -134,5 +151,4 @@ dff["NBTweet"]=NBTweet
 dff["NBFollower"]=NBFollower
 dff["TweeID"]=TweeID
 
-
-dff.to_csv('ExempleChann.csv',index=False)
+dff.to_json('temp.json', orient='records', lines=True)
