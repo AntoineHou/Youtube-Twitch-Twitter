@@ -2,7 +2,6 @@ import tweepy
 import pandas as pd 
 
 df=pd.read_csv("Tweet_ID.csv")
-df=df.drop(columns="Unnamed: 0")
 
 def load_api():
     consumer_key = "Sl1b8kxfpdesC7VBEqufGbrN2"
@@ -20,19 +19,19 @@ def info_status (User,TweetID) :
         text=status["text"]
         retweet_count=status["retweet_count"]
         favorite_count=status["favorite_count"]
-        if len(status["entities"]["hashtags"]) < 0 :
-            hashtags=status["entities"]["hashtags"][0]["text"]
+        hashtags=[]
+        if len(status["entities"]["hashtags"]) != 0 :
+            a=0
+            while a != len(status["entities"]["hashtags"]) :
+                hashtags.append(status["entities"]["hashtags"][a]["text"])
+                a=a+1
         else :
             hashtags=0
-        if len(status["entities"]["user_mentions"]) < 0 :
-            user_mentions=status["entities"]["hashtags"][0]["name"]
-        else :
-            user_mentions=0
-        dictionary={User : [text,retweet_count,favorite_count,hashtags,user_mentions]}
+        dictionary={User : [text,retweet_count,favorite_count,hashtags]}
         return dictionary
 
 def no_Id_compl(User) : 
-     dictionary={User : [0,0,0,0,0]}
+     dictionary={User : ["0","0","0","0"]}
      return dictionary
 
     
@@ -65,13 +64,18 @@ for data_frame in alldfs:
 data_frames_correction=[]
 
 for dataframe in data_frames : 
-    data_frames_correction.append(pd.DataFrame(dataframe["Info"].to_list(), columns=['text', 'retweet_count','favorite_count','hashtags','user_mentions']))
+    data_frames_correction.append(pd.DataFrame(dataframe["Info"].to_list(), columns=['text', 'retweet_count','favorite_count','hashtags']))
 
-dff=pd.concat(data_frames_correction,axis=1, keys=alldfs)
+data_frames_correction2=[]
 
-Hours=list(df.index)
-dff["Hours"]=Hours
-dff=dff.set_index("Hours")
-dff.to_csv("Twitter.csv")
+for data in data_frames_correction :
+    data["NBMention"]=data["text"].str.count('@')
+    data_frames_correction2.append(data)
+    
+    
+dff=pd.concat(data_frames_correction2,axis=1, keys=alldfs)
+
+
+#dff.to_csv("Twitter.csv")
 
 

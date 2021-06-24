@@ -9,14 +9,14 @@ import time
 TwitchF=twitch_data_f()
 df_f=importation()
 
-df_i=pd.read_csv('Channel.csv',engine='python')
+df_i=pd.read_csv('ExempleChann.csv',engine='python')
 name=importname()
 df_i=df_i.set_index('Channel')
 
-api_key="Key"
+api_key="AIzaSyBToNS7k_So6Ci_4sklt2DfK5IXdpN2rEs"
 youtube=build('youtube', 'v3', developerKey=api_key)
 
- #Modifier la date au besoin
+#Modifier la date au besoin
 dictionnary={}
 etags={}
 compteur=0
@@ -114,9 +114,9 @@ for key , value in etags.items() :
             
 Youtube_f=pd.concat(all_df,axis=1, keys=name)
 
-TwitchF.to_csv("Twitch_F.CSV")
+#TwitchF.to_csv("Twitch_F.CSV")
 Youtube_f.to_csv("Youtube_F.CSV")
 
-
-
+#df3= (pd.concat([TwitchF, Youtube_f], axis=1))
+#df3.to_csv("DonnéesExemple.CSV")
 
