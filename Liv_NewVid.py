@@ -3,26 +3,24 @@ from pyyoutube import Api
 import pandas as pd
 import time 
 import datetime
-from googleapiclient.discovery import build
 import json 
 import csv
 
-df=pd.read_csv('ExempleChann.csv',dtype={'TweeID': 'str'},engine="python")
+df=pd.read_csv('ExempleChann2.csv',dtype={'TweeID': 'str'},engine="python")
 
 
 URLT = 'https://api.twitch.tv/helix/streams?user_login='
-api = Api(api_key="")
+api = Api(api_key="AIzaSyBToNS7k_So6Ci_4sklt2DfK5IXdpN2rEs") #Clef Antoie Houssard
 authURL = 'https://id.twitch.tv/oauth2/token'
-Client_ID = ''
-Secret  = ''
+Client_ID = 'gz9d78zfjgqr7syjhve7ogl0gjn9in'
+Secret  = 'j0snruq4ut0blhulvgkbgzm7ay6ze4'
 
-api_key=""
-youtube=build('youtube', 'v3', developerKey=api_key)
+api_key2="AIzaSyB2m84TKUf_bpKMpV5IhfrLHKkXiA-ePyA" #Clef SocioLens 
 
-consumer_key = ""
-consumer_secret = ""
-access_token = ""
-access_token_secret = ""
+consumer_key = "Sl1b8kxfpdesC7VBEqufGbrN2"
+consumer_secret = "wAB0UMxyVyNnBSBU4fihQFtQpq94Bdds94n273w8QiaRLY3o7f"
+access_token = "2771537930-b02f7A23GZ389daUggwm14lRzkxbyCY0ZJRUy6l"
+access_token_secret = "zESyM4t7bJ7wlJSEbWdhxNclnW32gP1xhBlpSLPmPWYa1"
   
 
 AutParams = {'client_id': Client_ID,
@@ -82,32 +80,46 @@ def Twitch_viewers(ident) :
 
 def NbVid (ID) : 
     if str(ID) != "nan" :
-        Channel=api.get_channel_info(channel_id=ID)
-        Channel=Channel.items[0].to_dict()
+        try:
+            Channel=api.get_channel_info(channel_id=ID)
+            Channel=Channel.items[0].to_dict()
+        except TypeError : 
+            Channel=0
     else :
         Channel=0
     return Channel
 
 def Vid_Etag (ID) :
-    if str(ID) != "nan" :
-        url1="https://www.googleapis.com/youtube/v3/playlistItems?playlistId="
-        url2="&key=AIzaSyB2m84TKUf_bpKMpV5IhfrLHKkXiA-ePyA&part=snippet&maxResults=1"
-        url=url1+ID+url2
-        response=requests.get(url).json()
-        a=response["items"][0]["snippet"]["resourceId"]["videoId"]
+    if str(ID) != "nan"  :
+        try:
+            url=str('https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId={}&key={}'.format(ID,api_key2))
+            response=requests.get(url).json()
+            a=response["items"][0]["snippet"]["resourceId"]["videoId"]
+        except TypeError : 
+            a=0
     else :
         a=0
     return a
     
-
-
 compteur=0
 
 YTVid=pd.DataFrame(list(df["Channel"]))
+YTVid2=pd.DataFrame(list(df["Channel"]))
+
 TWLIVE=pd.DataFrame(list(df["Channel"]))
 Names=list(df["Channel"])
 HOURS=[]
-Matrix_S=[]
+
+def Matrix_Import() :
+    try :
+        with open('Matrix_S.json') as f:
+                Matrix = json.load(f)
+    except FileNotFoundError :
+        Matrix=[]
+    return Matrix
+
+Matrix_S=Matrix_Import()    
+    
 Etags=[]
 
 def live_post_stats(compteur) :
@@ -115,6 +127,7 @@ def live_post_stats(compteur) :
         Matrix=dict.fromkeys(list(df["Channel"]),list())
         lisL=[]
         lisY=[]
+        lisY2=[]
         for ident in df["Channel"] :
             a=URLT+ident
             b=TwitchLive(a)
@@ -143,7 +156,17 @@ def live_post_stats(compteur) :
                 upload_playlist.append(f)
             except TypeError : 
                 lisY.append(0)  
+        for clef in df["ID2"]:
+            g=NbVid(clef)
+            try :
+                h=g['statistics']['videoCount']
+                i=g["contentDetails"]["relatedPlaylists"]["uploads"]
+                lisY2.append(h)  
+                upload_playlist.append(i)
+            except TypeError : 
+                lisY2.append(0)  
         YTVid[compteur+1]=lisY
+        YTVid2[compteur+1]=lisY2
         for key in upload_playlist : 
             b=Vid_Etag(key)
             chan=key
@@ -164,6 +187,8 @@ def live_post_stats(compteur) :
         compteur=compteur+1
         with open('Matrix_S.json', 'w') as fout:
             json.dump(Matrix_S , fout)
+        YTVid.to_json(r'YTVid_Etape.json')
+        TWLIVE.to_json(r"TWLIVE_Etape.json")
         print("Temps restant")
         print(str(datetime.timedelta(seconds=(cycle-compteur)*temps)))
         print("Cycles restant")
@@ -173,6 +198,9 @@ live_post_stats(compteur)
 
 YTNOUV=YTVid
 YTVid=YTVid.set_index(0)
+
+YTNOUV2=YTVid2
+YTVid2=YTVid2.set_index(0)
 
 df_TW=TWLIVE.set_index(0)    
 df_TW=df_TW.transpose()
@@ -221,9 +249,8 @@ Name=[]
 
 for item in YTNOUV[0].iteritems():
     Name.append(item[1])
-
+    
 YTNOUV=YTNOUV.set_index(0)
-
 colonnes=(len(YTNOUV.columns))
 
 for names in Name :
@@ -250,6 +277,35 @@ for names in Name :
 
 YTNOUV.columns=HOURS
 YTNOUV=YTNOUV.transpose()
+
+   
+YTNOUV2=YTNOUV2.set_index(0)
+colonnes=(len(YTNOUV2.columns))
+
+for names in Name :
+        a=["no post"]
+        b=[]
+        for row in YTNOUV2.loc[names]:
+            b.append(row)
+            if  len(b) == colonnes:
+                c=0
+                d=1
+                e=0
+                f=len(b)
+                while e != f-1 :
+                    if b[c] == b[d] :
+                        a.append("no post")
+                    else : 
+                        a.append("post")
+                    c=c+1
+                    d=d+1
+                    e=e+1
+            else :
+                pass
+        YTNOUV2.loc[names] = a
+
+YTNOUV2.columns=HOURS
+YTNOUV2=YTNOUV2.transpose()
 
 #Network Co-Watching 
 
@@ -278,6 +334,7 @@ while compt_dic != len(Matrix_S) :
     AdjencyMatrix=pd.DataFrame(Network)
     df_=df_.add(AdjencyMatrix)
 
+df_=df_.fillna(0)
 df_=df_/cycle
 df_=df_.astype(int)
 
@@ -366,8 +423,12 @@ while ccc != len(Name) :
     df_tw[m_na, "Retention"]=composite_list[ccc]
     ccc=ccc+1
 
-YTNOUV.to_csv("YTNOUV.CSV")
-df_l.to_csv("df_l.CSV")
-df_tw.to_csv("df_tw.CSV")
-df_.to_csv("AdjencyMatrix.csv")
-AdjencyMatrix2.to_csv("AdjencyMatrix2.csv")
+#YTNOUV.to_csv("YTNOUV.CSV")
+#YTNOUV2.to_csv("YTNOUV2.CSV")
+#df_l.to_csv("df_l.CSV")
+#df_tw.to_csv("df_tw.CSV")
+#df_.to_csv("AdjencyMatrix.csv")
+#AdjencyMatrix2.to_csv("AdjencyMatrix2.csv")
+
+
+
